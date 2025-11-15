@@ -1,0 +1,37 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: secret-generator
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: dev
+            namespace: dev
+          - name: staging
+            namespace: staging
+          - name: prod
+            namespace: prod
+  template:
+    metadata:
+      name: '{{name}}-secret'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/dheeruthedepl0yer/helm-archives.git
+        targetRevision: main
+        path: secrets
+        helm:
+          parameters:
+            - name: env
+              value: '{{name}}'
+            - name: namespace
+              value: '{{namespace}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: true
